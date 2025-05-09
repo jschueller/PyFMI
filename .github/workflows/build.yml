@@ -77,5 +77,5 @@ jobs:
           conda install -y assimulo fmilib pytest "cython<3.1" "libblas=*=*netlib"
           python -V
           python -c "import numpy"
-          python setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library" || exit 1
+          python setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library"
           pytest
