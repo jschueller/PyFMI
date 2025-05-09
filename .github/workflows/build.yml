@@ -74,7 +74,7 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          python -VV
-          python -c "import numpy"
-          python setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library"
-          pytest
+          C:\Users\runneradmin\miniconda3\bin\python -VV
+          C:\Users\runneradmin\miniconda3\bin\python -c "import numpy"
+          C:\Users\runneradmin\miniconda3\bin\python setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library"
+          C:\Users\runneradmin\miniconda3\bin\pytest
