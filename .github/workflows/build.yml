@@ -67,15 +67,14 @@ jobs:
         with:
           miniforge-version: latest
           conda-remove-defaults: "true"
-      # - name: Install
-      #   shell: cmd
-      #   run: conda install -y assimulo fmilib pytest "cython<3.1" "libblas=*=*netlib"
       # - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install
+        shell: cmd
+        run: conda install -y assimulo fmilib pytest "cython<3.1" "libblas=*=*netlib"
       - name: Build
         shell: cmd
         run: |
-          conda install -y assimulo fmilib pytest "cython<3.1" "libblas=*=*netlib"
-          python -V
+          python -VV
           python -c "import numpy"
           python setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library"
           pytest
