@@ -70,11 +70,11 @@ jobs:
       - name: Install
         shell: cmd
         run: conda install -y assimulo fmilib pytest "cython<3.1" "libblas=*=*netlib"
-      - uses: ilammy/msvc-dev-cmd@v1
+      # - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         shell: cmd
         run: |
           set "LIB=C:\Users\runneradmin\miniconda3\Library\lib;%LIB%"
           set "INCLUDE=C:\Users\runneradmin\miniconda3\Library\include;%INCLUDE%"
-          python3 setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library"
+          python setup.py install --fmil-home="C:\Users\runneradmin\miniconda3\Library"
           pytest
