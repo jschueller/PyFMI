@@ -392,29 +392,30 @@ cdef class FMUModelBase(FMI_BASE.ModelBase):
         self._nContinuousStates = FMIL1.fmi1_import_get_number_of_continuous_states(self._fmu)
         self._log_handler.capi_end_callback(self._max_log_size_msg_sent, self._current_log_size)
 
-        if log_file_name is None:
-            log_file_name = self._get_default_log_file_name()
+        if log_level != FMIL.jm_log_level_nothing:
+            if log_file_name is None:
+                log_file_name = self._get_default_log_file_name()
 
-        if not isinstance(log_file_name, (str, Path)):
-            self._set_log_stream(log_file_name)
-            for i in range(len(self._log)):
-                try:
-                    self._log_stream.write("FMIL: module = %s, log level = %d: %s\n"%(self._log[i][0], self._log[i][1], self._log[i][2]))
-                except Exception:
-                    if hasattr(self._log_stream, 'closed') and self._log_stream.closed:
-                        logging.warning("Unable to log to closed stream.")
-                    else:
-                        logging.warning("Unable to log to stream.")
-        else:
-            log_file_name = str(log_file_name) # convert e.g. pathlib.Path objects
-            fmu_log_name = pyfmi_util.encode(log_file_name)
-            self._fmu_log_name = <char*>FMIL.malloc((FMIL.strlen(fmu_log_name)+1)*sizeof(char))
-            FMIL.strcpy(self._fmu_log_name, fmu_log_name)
-
-            #Create the log file
-            with open(self._fmu_log_name,'w') as file:
+            if not isinstance(log_file_name, (str, Path)):
+                self._set_log_stream(log_file_name)
                 for i in range(len(self._log)):
-                    file.write("FMIL: module = %s, log level = %d: %s\n"%(self._log[i][0], self._log[i][1], self._log[i][2]))
+                    try:
+                        self._log_stream.write("FMIL: module = %s, log level = %d: %s\n"%(self._log[i][0], self._log[i][1], self._log[i][2]))
+                    except Exception:
+                        if hasattr(self._log_stream, 'closed') and self._log_stream.closed:
+                            logging.warning("Unable to log to closed stream.")
+                        else:
+                            logging.warning("Unable to log to stream.")
+            else:
+                log_file_name = str(log_file_name) # convert e.g. pathlib.Path objects
+                fmu_log_name = pyfmi_util.encode(log_file_name)
+                self._fmu_log_name = <char*>FMIL.malloc((FMIL.strlen(fmu_log_name)+1)*sizeof(char))
+                FMIL.strcpy(self._fmu_log_name, fmu_log_name)
+
+                #Create the log file
+                with open(self._fmu_log_name,'w') as file:
+                    for i in range(len(self._log)):
+                        file.write("FMIL: module = %s, log level = %d: %s\n"%(self._log[i][0], self._log[i][1], self._log[i][2]))
 
         self._log = []
 
