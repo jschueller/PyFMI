@@ -552,6 +552,29 @@ cdef class FMIODE2(cExplicit_Problem):
         # Enter continuous mode again
         self._model.enter_continuous_time_mode()
 
+        # Re-evaluate outputs after event iteration to ensure algebraic
+        # variables (e.g. forces in array connections) are consistent.
+        # Some FMU runtimes may not fully update all outputs during
+        # enter_continuous_time_mode, and the subsequent handle_result
+        # would skip _get_derivatives if _compare returns False.
+        if self.model_me2_instance:
+            if self._f_nbr == 0:
+                if self._vrefs_nostate_eval:
+                    try:
+                        self.model_me2.get_real(self._vrefs_nostate_eval)
+                    except FMUException:
+                        raise AssimuloRecoverableError
+            else:
+                status = self.model_me2._get_derivatives(self._state_temp_1)
+                if status != 0:
+                    raise FMUException(
+                        'Failed to get the derivatives after event update '
+                        'at time: %E.' % solver.t
+                    )
+        else:
+            if self._f_nbr > 0:
+                rhs = self._model.get_derivatives()
+
     def step_events(self, solver):
         """
         Method which is called at each successful step.

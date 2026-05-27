@@ -483,6 +483,20 @@ cdef class FMIODE3(cExplicit_Problem):
         # Enter continuous mode again
         self._model.enter_continuous_time_mode()
 
+        # Re-evaluate outputs after event iteration to ensure algebraic
+        # variables (e.g. forces in array connections) are consistent.
+        if self.model_me3_instance:
+            if self._f_nbr > 0:
+                status = self.model_me3._get_derivatives(self._state_temp_1)
+                if status != 0:
+                    raise FMUException(
+                        'Failed to get the derivatives after event update '
+                        'at time: %E.' % solver.t
+                    )
+        else:
+            if self._f_nbr > 0:
+                rhs = self._model.get_derivatives()
+
     def step_events(self, solver):
         """ Method which is called at each successful step. """
         cdef FMIL3.fmi3_boolean_t enter_event_mode = False, terminate_simulation = False

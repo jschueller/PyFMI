@@ -1115,6 +1115,53 @@ class Test_FMUModelBase2:
         model = FMUModelME2(FMU_PATHS.ME2.coupled_clutches, _connect_dll=False)
         assert model.get_variable_description("J1.phi") == "Absolute rotation angle of component"
 
+def test_result_consistency_after_events():
+    """
+    Test that simulation results are consistent after state events, using
+    different result handlers. Regression test for issue #405 where outputs
+    (e.g. forces in array connections) could be stale after event handling
+    because _get_derivatives was not called after enter_continuous_time_mode.
+    """
+    ref_path = REFERENCE_FMU_FMI2_PATH
+
+    # BouncingBall has state events (the bounce), so the event handling
+    # code path is exercised.
+    for result_handling in ("binary", "csv", "memory"):
+        fmu = load_fmu(ref_path / "BouncingBall.fmu")
+        opts = fmu.simulate_options()
+        opts["result_handling"] = result_handling
+        opts["ncp"] = 500
+        res = fmu.simulate(final_time=2.0, options=opts)
+
+        h = res["h"]
+        t = res["time"]
+
+        assert len(t) >= 100, (
+            f"Too few result points with {result_handling=}: {len(t)}"
+        )
+        # Ball should stay above (or on) the ground
+        assert np.all(h >= -1e-10), (
+            f"Ball height < -1e-10 with {result_handling=}"
+        )
+        # Ball starts at h=1
+        assert abs(h[0] - 1.0) < 1e-6
+
+    # Feedthrough: output must equal input, verifying variable values
+    # are written correctly.
+    for result_handling in ("binary", "csv", "memory"):
+        fmu2 = load_fmu(ref_path / "Feedthrough.fmu")
+        opts = fmu2.simulate_options()
+        opts["result_handling"] = result_handling
+        res = fmu2.simulate(final_time=1.0, options=opts)
+        inp = res["Float64_continuous_input"]
+        out = res["Float64_continuous_output"]
+        diff = np.abs(inp - out)
+        assert np.max(diff) < 1e-12, (
+            f"Feedthrough mismatch {np.max(diff):.2e} "
+            f"with {result_handling=}"
+        )
+
+
 @uses_test_fmus
 @pytest.mark.parametrize("fmu_path", 
     [
